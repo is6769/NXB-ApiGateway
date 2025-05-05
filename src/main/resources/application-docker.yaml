@@ -3,3 +3,13 @@ spring:
     name: api-gateway
   config:
     import: configserver:http://config-server:8888
+  cloud:
+    gateway:
+      routes:
+        - id: CRM-service
+          uri: lb://CRM-service
+          predicates:
+            - Path=/crm/**
+          filters:
+            - StripPrefix=1
+            - JwtHeaderFilter
