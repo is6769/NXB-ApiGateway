@@ -2,6 +2,7 @@ package org.example.apigateway.filters;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.http.HttpStatus;
@@ -13,6 +14,9 @@ import java.util.Map;
 
 @Component
 public class JwtHeaderFilter extends AbstractGatewayFilterFactory<JwtHeaderFilter.Config> {
+
+    @Value("${const.auth.introspection-uri}")
+    private String INTROSPECTION_URI;
 
     private static final Logger log = LoggerFactory.getLogger(JwtHeaderFilter.class);
     private final WebClient webClient;
@@ -39,7 +43,7 @@ public class JwtHeaderFilter extends AbstractGatewayFilterFactory<JwtHeaderFilte
             log.info(token);
 
             return webClient.post()
-                    .uri("http://localhost:8765/auth/introspection")
+                    .uri(INTROSPECTION_URI)
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(Map.of("token", token))
                     .retrieve()
