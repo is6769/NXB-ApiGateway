@@ -12,21 +12,46 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.Map;
 
+/**
+ * Фильтр gateway для проверки JWT токенов и добавления заголовков пользователя.
+ * Этот фильтр извлекает JWT токен из заголовка Authorization, проверяет его
+ * через сервис аутентификации и, в случае успеха, добавляет заголовки
+ * X-User-Id и X-User-Role в запрос перед его передачей дальше.
+ */
 @Component
 public class JwtHeaderFilter extends AbstractGatewayFilterFactory<JwtHeaderFilter.Config> {
 
+    /**
+     * URI для обращения к эндпоинту интроспекции токенов в SSO-сервисе.
+     **/
     @Value("${const.auth.introspection-uri}")
     private String INTROSPECTION_URI;
 
     private static final Logger log = LoggerFactory.getLogger(JwtHeaderFilter.class);
-    private final WebClient webClient;
+        private final WebClient webClient;
 
 
-    public JwtHeaderFilter(WebClient.Builder webClientBuilder) {
+        public JwtHeaderFilter(WebClient.Builder webClientBuilder) {
         super(Config.class);
         this.webClient = webClientBuilder.build();
     }
 
+    /**
+     * Применяет логику фильтра к текущему обмену (запрос/ответ).
+     * <p>
+     * Логика работы:
+     * 1. Извлекает заголовок Authorization.
+     * 2. Если заголовок отсутствует или не начинается с "Bearer ", возвращает 401 Unauthorized.
+     * 3. Извлекает токен.
+     * 4. Отправляет токен на эндпоинт интроспекции SSO-сервиса.
+     * 5. Если токен активен:
+     *    - Добавляет заголовки X-User-Id (ref_id или "MANAGER") и X-User-Role.
+     *    - Передает запрос дальше по цепочке.
+     * 6. Если токен неактивен или произошла ошибка при интроспекции, возвращает 401 Unauthorized.
+     * </p>
+     * @param config конфигурация фильтра (в данном случае не используется).
+     * @return GatewayFilter, который будет применен к запросу.
+     */
     @Override
     public GatewayFilter apply(Config config) {
 
@@ -65,13 +90,17 @@ public class JwtHeaderFilter extends AbstractGatewayFilterFactory<JwtHeaderFilte
                         return exchange.getResponse().setComplete();
                     })
                     .onErrorResume(e -> {
-                        log.info(e.toString());
+                        log.info(e.toString()); // Логируем ошибку интроспекции
                         exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
                         return exchange.getResponse().setComplete();
                     });
         };
     }
 
+    /**
+     * Класс конфигурации для JwtHeaderFilter.
+     * В данном случае не содержит свойств, но необходим для AbstractGatewayFilterFactory.
+     */
     public static class Config {
         // Add configuration properties here if needed
     }

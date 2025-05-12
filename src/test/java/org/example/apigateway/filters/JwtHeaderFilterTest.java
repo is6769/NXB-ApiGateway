@@ -26,6 +26,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+/**
+ * Тесты для {@link JwtHeaderFilter}.
+ * Проверяют корректность работы фильтра в различных сценариях.
+ */
 @ExtendWith(MockitoExtension.class)
 class JwtHeaderFilterTest {
 
@@ -55,6 +59,9 @@ class JwtHeaderFilterTest {
         ReflectionTestUtils.setField(jwtHeaderFilter, "webClient", webClient);
     }
 
+    /**
+     * Тест: если заголовок Authorization отсутствует, должен вернуться статус UNAUTHORIZED.
+     */
     @Test
     void apply_WithNoAuthHeader_ReturnsUnauthorized() {
         MockServerHttpRequest request = MockServerHttpRequest.get("/test")
@@ -72,6 +79,9 @@ class JwtHeaderFilterTest {
         verifyNoInteractions(filterChain);
     }
 
+    /**
+     * Тест: если формат заголовка Authorization некорректен, должен вернуться статус UNAUTHORIZED.
+     */
     @Test
     void apply_WithInvalidAuthHeaderFormat_ReturnsUnauthorized() {
         MockServerHttpRequest request = MockServerHttpRequest.get("/test")
@@ -90,6 +100,10 @@ class JwtHeaderFilterTest {
         verifyNoInteractions(filterChain);
     }
 
+    /**
+     * Тест: если токен валиден, должны быть добавлены заголовки X-User-Id и X-User-Role,
+     * и запрос должен быть передан дальше по цепочке.
+     */
     @Test
     void apply_WithValidToken_AddsUserHeaders() {
         MockServerHttpRequest request = MockServerHttpRequest.get("/test")
@@ -134,6 +148,10 @@ class JwtHeaderFilterTest {
         verify(requestBodySpec).bodyValue(Map.of("token", VALID_TOKEN));
     }
 
+    /**
+     * Тест: если сервис интроспекции возвращает, что токен неактивен,
+     * должен вернуться статус UNAUTHORIZED.
+     */
     @Test
     void apply_WithInactiveToken_ReturnsUnauthorized() {
         MockServerHttpRequest request = MockServerHttpRequest.get("/test")
@@ -169,6 +187,10 @@ class JwtHeaderFilterTest {
         verifyNoInteractions(filterChain);
     }
 
+    /**
+     * Тест: если при обращении к сервису интроспекции происходит ошибка,
+     * должен вернуться статус UNAUTHORIZED.
+     */
     @Test
     void apply_WithIntrospectionError_ReturnsUnauthorized() {
         MockServerHttpRequest request = MockServerHttpRequest.get("/test")
@@ -200,6 +222,10 @@ class JwtHeaderFilterTest {
         verifyNoInteractions(filterChain);
     }
 
+    /**
+     * Тест: если токен валиден, но ref_id отсутствует в ответе от сервиса интроспекции,
+     * в заголовок X-User-Id должно быть установлено значение "MANAGER".
+     */
     @Test
     void apply_WithNullRefId_UsesManager() {
         MockServerHttpRequest request = MockServerHttpRequest.get("/test")
