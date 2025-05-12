@@ -42,11 +42,11 @@ API Gateway выполняет следующие функции:
 API Gateway обеспечивает маршрутизацию к следующим сервисам:
 
 - **SSO Service**: Аутентификация и авторизация
-  - `/auth/**` → SSO-service
+  - `/sso/auth/**` → SSO-service
 
 - **CRM Service**: Управление абонентами
-  - `/manager/**` → CRM-service (требует роль MANAGER)
-  - `/subscriber/**` → CRM-service (требует роль SUBSCRIBER)
+  - `/crm/manager/**` → CRM-service (требует роль MANAGER)
+  - `crm/subscriber/**` → CRM-service (требует роль SUBSCRIBER)
 
 
 ## Фильтры
